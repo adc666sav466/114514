@@ -12,4 +12,6 @@
     <string name="notification_running">随机计时器运行中</string>
     <string name="notification_study">学习时间开始</string>
     <string name="notification_rest">休息时间开始</string>
+    <string name="hint_black_box">黑箱模式：不会显示剩余时间，只会在切换时通知你。</string>
+    <string name="notification_permission_denied">未获得通知权限，切换提醒可能无法显示。</string>
 </resources>
