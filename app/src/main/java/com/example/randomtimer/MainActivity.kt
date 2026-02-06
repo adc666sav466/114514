@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import android.Manifest
 import android.content.pm.PackageManager
 
@@ -42,6 +43,16 @@ class MainActivity : AppCompatActivity() {
         findViewById<RadioButton>(R.id.difficultyEasy).isChecked = true
 
         startButton.setOnClickListener {
+            if (!canPostNotifications()) {
+                Toast.makeText(
+                    this,
+                    R.string.notification_permission_denied,
+                    Toast.LENGTH_SHORT
+                ).show()
+                requestNotificationPermissionIfNeeded()
+                updateStartButtonState()
+                return@setOnClickListener
+            }
             val level = when (difficultyGroup.checkedRadioButtonId) {
                 R.id.difficultyMedium -> DifficultyLevel.MEDIUM
                 R.id.difficultyHard -> DifficultyLevel.HARD
@@ -63,11 +74,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         requestNotificationPermissionIfNeeded()
+        updateStartButtonState()
     }
 
     override fun onStart() {
         super.onStart()
         registerReceiver(statusReceiver, IntentFilter(RandomTimerService.ACTION_STATUS))
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateStartButtonState()
     }
 
     override fun onStop() {
@@ -102,6 +119,24 @@ class MainActivity : AppCompatActivity() {
         ) {
             Toast.makeText(this, R.string.notification_permission_denied, Toast.LENGTH_SHORT).show()
         }
+        updateStartButtonState()
+    }
+
+    private fun canPostNotifications(): Boolean {
+        if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+            return false
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return true
+        }
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun updateStartButtonState() {
+        startButton.isEnabled = canPostNotifications()
     }
 
     companion object {
