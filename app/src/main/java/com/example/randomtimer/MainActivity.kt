@@ -43,7 +43,10 @@ class MainActivity : AppCompatActivity() {
         findViewById<RadioButton>(R.id.difficultyEasy).isChecked = true
 
         startButton.setOnClickListener {
-            if (!canPostNotifications()) {
+
+
+            if (!hasNotificationPermission()) {
+codex/create-random-timer-android-app-ov6bvi
                 Toast.makeText(
                     this,
                     R.string.notification_permission_denied,
@@ -122,10 +125,10 @@ class MainActivity : AppCompatActivity() {
         updateStartButtonState()
     }
 
-    private fun canPostNotifications(): Boolean {
-        if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
-            return false
-        }
+
+
+    private fun hasNotificationPermission(): Boolean {
+codex/create-random-timer-android-app-ov6bvi
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return true
         }
@@ -136,7 +139,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateStartButtonState() {
-        startButton.isEnabled = canPostNotifications()
+
+
+        startButton.isEnabled = hasNotificationPermission()
+codex/create-random-timer-android-app-ov6bvi
     }
 
     companion object {
