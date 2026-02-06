@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">随机计时器</string>
+    <string name="difficulty_easy">轻松</string>
+    <string name="difficulty_medium">中等</string>
+    <string name="difficulty_hard">困难</string>
+    <string name="status_idle">当前状态：未开始</string>
+    <string name="status_study">当前状态：学习中</string>
+    <string name="status_rest">当前状态：休息中</string>
+    <string name="start">开始</string>
+    <string name="stop">停止</string>
+    <string name="notification_channel">随机计时器提醒</string>
+    <string name="notification_running">随机计时器运行中</string>
+    <string name="notification_study">学习时间开始</string>
+    <string name="notification_rest">休息时间开始</string>
+</resources>
