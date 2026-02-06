@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
 
 
             if (!hasNotificationPermission()) {
-codex/create-random-timer-android-app-ov6bvi
                 Toast.makeText(
                     this,
                     R.string.notification_permission_denied,
@@ -128,7 +127,7 @@ codex/create-random-timer-android-app-ov6bvi
 
 
     private fun hasNotificationPermission(): Boolean {
-codex/create-random-timer-android-app-ov6bvi
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return true
         }
@@ -142,7 +141,7 @@ codex/create-random-timer-android-app-ov6bvi
 
 
         startButton.isEnabled = hasNotificationPermission()
-codex/create-random-timer-android-app-ov6bvi
+
     }
 
     companion object {
