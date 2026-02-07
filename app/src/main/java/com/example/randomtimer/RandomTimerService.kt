@@ -9,19 +9,23 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.SystemClock
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kotlin.random.Random
 
 class RandomTimerService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var currentMode: TimerMode = TimerMode.STUDY
     private var level: DifficultyLevel = DifficultyLevel.EASY
+    private var nextSwitchAtElapsed: Long = -1L
 
     private val switchRunnable = Runnable {
         currentMode = if (currentMode == TimerMode.STUDY) TimerMode.REST else TimerMode.STUDY
         notifyModeStart(currentMode)
-        broadcastStatus(currentMode)
         scheduleNextSwitch()
+        broadcastStatus(currentMode)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -30,15 +34,32 @@ class RandomTimerService : Service() {
         when (intent?.action) {
             ACTION_START -> {
                 level = DifficultyLevel.valueOf(intent.getStringExtra(EXTRA_LEVEL) ?: DifficultyLevel.EASY.name)
-                startForeground(NOTIFICATION_ID, buildRunningNotification())
-                handler.removeCallbacks(switchRunnable)
-                currentMode = TimerMode.STUDY
-                notifyModeStart(currentMode)
-                broadcastStatus(currentMode)
-                scheduleNextSwitch()
+                if (!canPostNotifications()) {
+                    handler.post {
+                        Toast.makeText(
+                            this,
+                            R.string.notification_permission_denied,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                try {
+                    startForeground(NOTIFICATION_ID, buildRunningNotification())
+                    handler.removeCallbacks(switchRunnable)
+                    currentMode = TimerMode.STUDY
+                    notifyModeStart(currentMode)
+                    scheduleNextSwitch()
+                    broadcastStatus(currentMode)
+                } catch (exception: SecurityException) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
             }
             ACTION_STOP -> {
                 handler.removeCallbacks(switchRunnable)
+                nextSwitchAtElapsed = -1L
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
@@ -57,6 +78,7 @@ class RandomTimerService : Service() {
             TimerMode.REST -> randomMinutesFor(level).rest
         }
         val delayMillis = durationMinutes * 60_000L
+        nextSwitchAtElapsed = SystemClock.elapsedRealtime() + delayMillis
         if (delayMillis == 0L) {
             handler.post(switchRunnable)
         } else {
@@ -81,14 +103,17 @@ class RandomTimerService : Service() {
             TimerMode.STUDY -> getString(R.string.notification_study)
             TimerMode.REST -> getString(R.string.notification_rest)
         }
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(title)
-            .setContentText(getString(R.string.notification_running))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .build()
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.notify(MODE_NOTIFICATION_ID, notification)
+        if (canPostNotifications()) {
+            val notification = NotificationCompat.Builder(this, MODE_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(title)
+                .setContentText(getString(R.string.notification_running))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .build()
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.notify(MODE_NOTIFICATION_ID, notification)
+        }
     }
 
     private fun broadcastStatus(mode: TimerMode) {
@@ -98,13 +123,14 @@ class RandomTimerService : Service() {
         }
         val intent = Intent(ACTION_STATUS).apply {
             putExtra(EXTRA_STATUS, statusText)
+            putExtra(EXTRA_NEXT_SWITCH_AT, nextSwitchAtElapsed)
         }
         sendBroadcast(intent)
     }
 
     private fun buildRunningNotification(): Notification {
         createNotificationChannel()
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        return NotificationCompat.Builder(this, RUNNING_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(getString(R.string.notification_running))
             .setContentText(getString(R.string.app_name))
@@ -112,15 +138,25 @@ class RandomTimerService : Service() {
             .build()
     }
 
+    private fun canPostNotifications(): Boolean {
+        return NotificationManagerCompat.from(this).areNotificationsEnabled()
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = getSystemService(NotificationManager::class.java)
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                getString(R.string.notification_channel),
-                NotificationManager.IMPORTANCE_DEFAULT
+            val runningChannel = NotificationChannel(
+                RUNNING_CHANNEL_ID,
+                getString(R.string.notification_running),
+                NotificationManager.IMPORTANCE_LOW
             )
-            manager.createNotificationChannel(channel)
+            val modeChannel = NotificationChannel(
+                MODE_CHANNEL_ID,
+                getString(R.string.notification_channel),
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            manager.createNotificationChannel(runningChannel)
+            manager.createNotificationChannel(modeChannel)
         }
     }
 
@@ -147,8 +183,10 @@ class RandomTimerService : Service() {
         const val ACTION_STATUS = "com.example.randomtimer.action.STATUS"
         const val EXTRA_LEVEL = "com.example.randomtimer.extra.LEVEL"
         const val EXTRA_STATUS = "com.example.randomtimer.extra.STATUS"
+        const val EXTRA_NEXT_SWITCH_AT = "com.example.randomtimer.extra.NEXT_SWITCH_AT"
 
-        private const val CHANNEL_ID = "random_timer_channel"
+        private const val RUNNING_CHANNEL_ID = "random_timer_running_channel"
+        private const val MODE_CHANNEL_ID = "random_timer_mode_channel"
         private const val NOTIFICATION_ID = 1001
         private const val MODE_NOTIFICATION_ID = 1002
     }
