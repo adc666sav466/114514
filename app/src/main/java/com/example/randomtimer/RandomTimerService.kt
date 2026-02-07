@@ -10,7 +10,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 
- main
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -54,7 +54,7 @@ class RandomTimerService : Service() {
                
                     broadcastStatus(currentMode)
                     scheduleNextSwitch()
-main
+
                 } catch (exception: SecurityException) {
                     stopSelf()
                     return START_NOT_STICKY
@@ -113,7 +113,7 @@ main
                 .setContentTitle(title)
                 .setContentText(getString(R.string.notification_running))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-main
+
                 .build()
             val manager = getSystemService(NotificationManager::class.java)
             manager.notify(MODE_NOTIFICATION_ID, notification)
