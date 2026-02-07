@@ -67,7 +67,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         startButton.setOnClickListener {
-            if (!canPostNotifications()) {
+
+
+
+            if (!hasNotificationPermission()) {
+main
                 Toast.makeText(
                     this,
                     R.string.notification_permission_denied,
@@ -101,13 +105,18 @@ class MainActivity : AppCompatActivity() {
 
         requestNotificationPermissionIfNeeded()
         updateStartButtonState()
-        updateTimeVisibility()
+ main
     }
 
     override fun onStart() {
         super.onStart()
         registerReceiver(statusReceiver, IntentFilter(RandomTimerService.ACTION_STATUS))
         uiHandler.post(countdownRunnable)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateStartButtonState()
     }
 
     override fun onResume() {
@@ -151,10 +160,12 @@ class MainActivity : AppCompatActivity() {
         updateStartButtonState()
     }
 
-    private fun canPostNotifications(): Boolean {
-        if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
-            return false
-        }
+
+
+
+    private fun hasNotificationPermission(): Boolean {
+
+main
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return true
         }
@@ -165,32 +176,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateStartButtonState() {
-        startButton.isEnabled = canPostNotifications()
-    }
 
-    private fun updateTimeRemaining() {
-        if (blackBoxSwitch.isChecked) {
-            return
-        }
-        val remainingMillis = nextSwitchAtElapsed - android.os.SystemClock.elapsedRealtime()
-        if (nextSwitchAtElapsed <= 0L || remainingMillis <= 0L) {
-            timeRemainingText.text = getString(R.string.time_remaining_idle)
-            return
-        }
-        val totalSeconds = remainingMillis / 1000
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        val formatted = String.format("%02d:%02d", minutes, seconds)
-        timeRemainingText.text = getString(R.string.time_remaining_format, formatted)
-    }
+        startButton.isEnabled = hasNotificationPermission()
 
-    private fun updateTimeVisibility() {
-        if (blackBoxSwitch.isChecked) {
-            timeRemainingText.visibility = android.view.View.GONE
-        } else {
-            timeRemainingText.visibility = android.view.View.VISIBLE
-            updateTimeRemaining()
-        }
+ main
     }
 
     companion object {
