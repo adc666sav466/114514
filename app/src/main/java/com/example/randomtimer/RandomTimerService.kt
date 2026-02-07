@@ -10,6 +10,8 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 
+
+ main
  main
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -51,10 +53,12 @@ class RandomTimerService : Service() {
                     handler.removeCallbacks(switchRunnable)
                     currentMode = TimerMode.STUDY
                     notifyModeStart(currentMode)
+
                
                     broadcastStatus(currentMode)
                     scheduleNextSwitch()
 main
+ main
                 } catch (exception: SecurityException) {
                     stopSelf()
                     return START_NOT_STICKY
@@ -108,11 +112,13 @@ main
         }
         if (canPostNotifications()) {
 
+
             val notification = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(title)
                 .setContentText(getString(R.string.notification_running))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+main
 main
                 .build()
             val manager = getSystemService(NotificationManager::class.java)
