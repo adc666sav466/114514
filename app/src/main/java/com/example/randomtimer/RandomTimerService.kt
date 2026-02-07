@@ -9,7 +9,10 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.os.SystemClock
+
+
+ main
+ main
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -50,8 +53,12 @@ class RandomTimerService : Service() {
                     handler.removeCallbacks(switchRunnable)
                     currentMode = TimerMode.STUDY
                     notifyModeStart(currentMode)
-                    scheduleNextSwitch()
+
+               
                     broadcastStatus(currentMode)
+                    scheduleNextSwitch()
+main
+ main
                 } catch (exception: SecurityException) {
                     stopSelf()
                     return START_NOT_STICKY
@@ -104,12 +111,15 @@ class RandomTimerService : Service() {
             TimerMode.REST -> getString(R.string.notification_rest)
         }
         if (canPostNotifications()) {
-            val notification = NotificationCompat.Builder(this, MODE_CHANNEL_ID)
+
+
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(title)
                 .setContentText(getString(R.string.notification_running))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+main
+main
                 .build()
             val manager = getSystemService(NotificationManager::class.java)
             manager.notify(MODE_NOTIFICATION_ID, notification)
