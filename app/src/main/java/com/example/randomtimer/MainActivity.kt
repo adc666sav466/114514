@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
 
 
             if (!hasNotificationPermission()) {
-main
+
                 Toast.makeText(
                     this,
                     R.string.notification_permission_denied,
@@ -105,7 +105,7 @@ main
 
         requestNotificationPermissionIfNeeded()
         updateStartButtonState()
- main
+ 
     }
 
     override fun onStart() {
@@ -114,10 +114,7 @@ main
         uiHandler.post(countdownRunnable)
     }
 
-    override fun onResume() {
-        super.onResume()
-        updateStartButtonState()
-    }
+    
 
     override fun onResume() {
         super.onResume()
@@ -165,7 +162,7 @@ main
 
     private fun hasNotificationPermission(): Boolean {
 
-main
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return true
         }
@@ -179,7 +176,7 @@ main
 
         startButton.isEnabled = hasNotificationPermission()
 
- main
+ 
     }
 
     companion object {
