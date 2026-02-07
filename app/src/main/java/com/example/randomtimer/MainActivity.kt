@@ -6,12 +6,15 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
@@ -20,14 +23,30 @@ import android.content.pm.PackageManager
 
 class MainActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
+    private lateinit var timeRemainingText: TextView
     private lateinit var difficultyGroup: RadioGroup
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
+    private lateinit var blackBoxSwitch: SwitchCompat
+    private val uiHandler = Handler(Looper.getMainLooper())
+    private var nextSwitchAtElapsed: Long = -1L
+
+    private val countdownRunnable = object : Runnable {
+        override fun run() {
+            updateTimeRemaining()
+            uiHandler.postDelayed(this, 1_000L)
+        }
+    }
 
     private val statusReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val status = intent.getStringExtra(RandomTimerService.EXTRA_STATUS)
             statusText.text = status ?: getString(R.string.status_idle)
+            nextSwitchAtElapsed = intent.getLongExtra(
+                RandomTimerService.EXTRA_NEXT_SWITCH_AT,
+                -1L
+            )
+            updateTimeRemaining()
         }
     }
 
@@ -36,16 +55,23 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         statusText = findViewById(R.id.statusText)
+        timeRemainingText = findViewById(R.id.timeRemainingText)
         difficultyGroup = findViewById(R.id.difficultyGroup)
         startButton = findViewById(R.id.startButton)
         stopButton = findViewById(R.id.stopButton)
+        blackBoxSwitch = findViewById(R.id.blackBoxSwitch)
 
         findViewById<RadioButton>(R.id.difficultyEasy).isChecked = true
+        blackBoxSwitch.setOnCheckedChangeListener { _, _ ->
+            updateTimeVisibility()
+        }
 
         startButton.setOnClickListener {
 
 
+
             if (!hasNotificationPermission()) {
+main
                 Toast.makeText(
                     this,
                     R.string.notification_permission_denied,
@@ -73,15 +99,24 @@ class MainActivity : AppCompatActivity() {
             }
             startService(intent)
             statusText.text = getString(R.string.status_idle)
+            nextSwitchAtElapsed = -1L
+            updateTimeRemaining()
         }
 
         requestNotificationPermissionIfNeeded()
         updateStartButtonState()
+ main
     }
 
     override fun onStart() {
         super.onStart()
         registerReceiver(statusReceiver, IntentFilter(RandomTimerService.ACTION_STATUS))
+        uiHandler.post(countdownRunnable)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateStartButtonState()
     }
 
     override fun onResume() {
@@ -90,6 +125,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
+        uiHandler.removeCallbacks(countdownRunnable)
         unregisterReceiver(statusReceiver)
         super.onStop()
     }
@@ -126,8 +162,10 @@ class MainActivity : AppCompatActivity() {
 
 
 
+
     private fun hasNotificationPermission(): Boolean {
 
+main
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return true
         }
@@ -139,9 +177,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStartButtonState() {
 
-
         startButton.isEnabled = hasNotificationPermission()
 
+ main
     }
 
     companion object {
